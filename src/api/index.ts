@@ -1,22 +1,20 @@
+import { useState } from "react";
 import axios from "axios";
-import useSWR from "swr";
 import { RepoSearchResult } from "./type";
 
 export const api = axios.create({
   baseURL: "https://api.github.com/search/",
-  timeout: 1000,
+  timeout: 100000,
   headers: {
     accept: "application/vnd.github+json",
   },
 });
 
-const intervalMs = 5000;
+const intervalMs = 6000;
 
-let lastInvocationTime: number = 0;
-
+let lastInvocationTime = 0;
 api.interceptors.request.use((config) => {
   const now = Date.now();
-
   if (lastInvocationTime > 0) {
     lastInvocationTime += intervalMs;
     const waitPeriodForThisRequest = lastInvocationTime - now;
@@ -26,16 +24,16 @@ api.interceptors.request.use((config) => {
       });
     }
   }
-
   lastInvocationTime = now;
   return config;
 });
 
-const fetcher = (payload: { url: string; params?: object }) =>
-  api.get(payload.url, { params: payload?.params }).then((res) => res.data);
-
-interface getRepositoriesParameters {
+export interface getRepositoriesParameters {
   q: string;
+  sort?: "stars" | "forks" | "help-wanted-issues" | "updated";
+  order?: "asc" | "desc";
+  per_page?: number;
+  page?: number;
 }
 
 export const getRepositories = async (params: getRepositoriesParameters) => {
@@ -48,17 +46,3 @@ export const getRepositories = async (params: getRepositoriesParameters) => {
     console.log(error);
   }
 };
-
-export function useRepos(params: getRepositoriesParameters) {
-  const { data, error } = useSWR<RepoSearchResult>(
-    { url: "/repositories", params },
-    fetcher
-  );
-  console.log(data, error);
-
-  return {
-    data,
-    isLoading: !error && !data,
-    isError: error,
-  };
-}
