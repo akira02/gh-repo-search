@@ -6,14 +6,17 @@ import {
   Grid,
   Button,
   Center,
-  NumberInput,
-  NumberInputField,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   Spinner,
+  Link,
+  Tag,
+  HStack,
+  Heading,
+  Divider,
 } from "@chakra-ui/react";
-import { getRepositories, getRepositoriesParameters } from "./api";
+
+import { getRepositories, getRepositoriesParameters } from "./api/getRepo";
 import type { RepoSearchResult } from "./api/type";
+import SortButton from "./components/SortButton";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -38,42 +41,72 @@ function App() {
   }, [param]);
 
   return (
-    <Box>
-      <Flex>
+    <Box maxWidth="1024px" p="100px">
+      <Flex m="10px">
         <Input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
         />
-        <Button onClick={handelSearch}>Search</Button>
+        <Button ml="10px" onClick={handelSearch}>
+          Search
+        </Button>
+      </Flex>
+      <Flex justifyContent="flex-end" m="10px">
+        <SortButton param={param} setParam={setParam} />
       </Flex>
 
       <Grid minHeight="70vh">
         {loading ? (
-          <Spinner />
+          <Center>
+            <Spinner size="xl" />
+          </Center>
         ) : (
-          data?.items.map((item) => <Box key={item.id}>{item.name}</Box>)
+          data?.items.map((item) => (
+            <>
+              <Flex flexDirection="column" key={item.id} my="10px">
+                <Link href={item.html_url} isExternal>
+                  <Heading size="md">{item.full_name}</Heading>
+                </Link>
+                <Box my="10px">{item.description}</Box>
+                <HStack>
+                  <Tag>Forks: {item.forks_count}</Tag>
+                  <Tag>Stars: {item.stargazers_count}</Tag>
+                </HStack>
+              </Flex>
+              <Divider />
+            </>
+          ))
         )}
       </Grid>
 
       <Center>
-        <NumberInput
-          size="lg"
-          defaultValue={1}
-          min={1}
-          display="flex"
-          value={page}
-          onChange={(value) => {
-            setPage(Number(value));
+        <Button
+          m="10px"
+          onClick={() => {
+            const newPageNum = page > 1 ? page - 1 : 1;
+            setPage(newPageNum);
             setParam((prev) => ({
               ...prev,
-              page: Number(value),
+              page: newPageNum,
+            }));
+          }}
+          disabled={page <= 1}
+        >
+          Prev Page
+        </Button>
+        {page}
+        <Button
+          m="10px"
+          onClick={() => {
+            setPage((prev) => prev + 1);
+            setParam((prev) => ({
+              ...prev,
+              page: page + 1,
             }));
           }}
         >
-          <NumberDecrementStepper children="Prev Page" />
-          <NumberInputField />
-          <NumberIncrementStepper children="Next Page" />
-        </NumberInput>
+          Next Page
+        </Button>
       </Center>
     </Box>
   );

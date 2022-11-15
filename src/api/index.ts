@@ -1,6 +1,4 @@
-import { useState } from "react";
 import axios from "axios";
-import { RepoSearchResult } from "./type";
 
 export const api = axios.create({
   baseURL: "https://api.github.com/search/",
@@ -27,22 +25,3 @@ api.interceptors.request.use((config) => {
   lastInvocationTime = now;
   return config;
 });
-
-export interface getRepositoriesParameters {
-  q: string;
-  sort?: "stars" | "forks" | "help-wanted-issues" | "updated";
-  order?: "asc" | "desc";
-  per_page?: number;
-  page?: number;
-}
-
-export const getRepositories = async (params: getRepositoriesParameters) => {
-  try {
-    const { data } = await api.get<RepoSearchResult>("/repositories", {
-      params,
-    });
-    return data;
-  } catch (error) {
-    console.log(error);
-  }
-};
